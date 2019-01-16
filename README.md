@@ -42,9 +42,33 @@ JSON对象数据应包含一个属性“children”作为子集
 ```
 
 DataTables 初始化
+
 以截图样例为
+![image](http://www.toher.cn/UploadFiles/web_file/20190116234756.png)
 
 ```
+<!--HTML table-->
+<table class="table table-striped table-bordered table-hover" id="editable">
+                                <thead>
+                                    <tr>
+                                        <th width="4%"></th>
+                                        <th width="15%">名称</th>
+                                        <th>链接</th>
+                                        <th width="8%">类型</th>
+                                        <th>权限</th>
+                                        <th width="8%">排序</th>
+                                        <th width="8%">状态</th>
+                                        <th width="20%">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+```
+
+
+```
+//Javasctipt 
+var dataTable;
  $(function () {
                 dataTable = $("#editable").DataTable({
                     "dom": "l",
@@ -52,7 +76,7 @@ DataTables 初始化
                     "lengthMenu": [500],
                     "ajax": {
                         "url": ctx + "system/menu/dataJson",
-                        "async": false
+                        "async": false //如果全部展开时候 必须设置同步 才能调用自己写展开方法
                     },
                     'treeGrid': {
                         'left': 15,
