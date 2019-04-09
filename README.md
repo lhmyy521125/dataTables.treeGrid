@@ -1,5 +1,5 @@
 # dataTables.treeGrid
-DataTables.treeGrid.js Repair Edition
+DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，注意下载dataTables插件，注意下载dataTables插件 重要的说三遍！
 
 # 修正问题：
 1、当多层数据时，第一个子集未展开，第二个子集展开，点击父级收缩会出现死循环；
