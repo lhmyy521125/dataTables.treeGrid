@@ -11,10 +11,11 @@ DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，�
 
 
 ```
+//注意自行下载 dataTables  
 <script src='您的资源目录/jquery.js'></script>
-
 <script src='您的资源目录/jquery.dataTables.min.js'></script>
 
+//引入我们写的dataTables  Tree 插件
 <script src='您的资源目录/dataTables.treeGrid.js'></script>
 
 ```
