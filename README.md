@@ -2,9 +2,8 @@
 DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，注意下载dataTables插件，注意下载dataTables插件 重要的说三遍！
 # 更新日志
 2019-4-11：新增expandAll配置属性，true默认展开，false不展开不配置默认false
-# 修正问题：
-1、当多层数据时，第一个子集未展开，第二个子集展开，点击父级收缩会出现死循环；
-2、多层子集收缩的时候会导致第二级以下的展开不会删除问题；解决方案采用递归方式改写 getChildrenCollapseIndexs 方法
+2018-10-11：当多层数据时，第一个子集未展开，第二个子集展开，点击父级收缩会出现死循环；
+2018-10-11：多层子集收缩的时候会导致第二级以下的展开不会删除问题；解决方案采用递归方式改写收缩方法
 
 # 使用方法
 引入资源：
@@ -21,7 +20,6 @@ DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，�
 ```
 
 DataTables JSON 格式
-
 JSON对象数据应包含一个属性“children”作为子集
 
 ```
@@ -42,8 +40,6 @@ JSON对象数据应包含一个属性“children”作为子集
 }  
 ```
 
-
-
 DataTables 初始化
 
 ```
@@ -55,9 +51,10 @@ var dataTable = $("#editable").DataTable({
         "url": "dataJson.json", //请求得服务地址，返回JSON
     },
     'treeGrid': {
-        'left': 15,
-        'expandIcon': '<span><i class="fa fa-plus-square"></i></span>',
-        'collapseIcon': '<span><i class="fa fa-minus-square"></i></span>'
+        'left': 15, // 图标的缩进像素
+        'expandAll' : true, //是否默认展开 true 是
+        'expandIcon': '<span><i class="fa fa-plus-square"></i></span>', //展开图标
+        'collapseIcon': '<span><i class="fa fa-minus-square"></i></span>' //收缩图标
     }
     ...
 })
