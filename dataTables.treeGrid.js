@@ -1,8 +1,9 @@
 /**
  * @summary     TreeGrid
  * @description TreeGrid extension for DataTable
- * @version     1.0.1
+ * @version     1.0.2
  * @file dataTables.treeGrid.js
+ * 2019-04-12 此版本更新展开所有属性，支持配置默认展开
  */
 (function (factory) {
     if (typeof define === 'function' && define.amd) {
@@ -30,7 +31,8 @@
 }(function ($, window, document) {
     'use strict';
     var DataTable = $.fn.dataTable;
-
+    //定义全局 TR 子集 二维数组
+    var treeGridRows = {};
     var TreeGrid = function (dt, init) {
         var that = this;
 
@@ -72,7 +74,7 @@
             var select = settings._select;
             var dataTable = $(settings.nTable).dataTable().api();
             var sLeft = this.s.left;
-            var treeGridRows = {};
+
             var expandIcon = $(this.s.expandIcon);
             var collapseIcon = $(this.s.collapseIcon);
 
@@ -107,11 +109,10 @@
                 if (!$(this).html()) {
                     return;
                 }
-
                 // record selected indexes
                 var selectedIndexes = [];
                 select && (selectedIndexes = dataTable.rows({selected: true}).indexes().toArray());
-
+                var rows = dataTable.rows();
                 var parentTr = getParentTr(e.target);
                 var parentTrId = getTrId();
                 $(parentTr).attr('id', parentTrId);
@@ -172,6 +173,10 @@
                 }, 0);
             });
 
+            dataTable.on('init.dt', function () {
+                console.log('Table initialisation complete: ' + new Date().getTime());
+                expandAll(dataTable, "");
+            });
             // resetTreeGridRows on pagination
             dataTable.on('page', function () {
                 resetTreeGridRows();
@@ -215,6 +220,7 @@
                 inProgress = false;
             });
         }
+
     });
 
     function selectParent(dataTable, index) {
@@ -270,6 +276,7 @@
         }
     }
 
+
     function getParentTr(target) {
         return $(target).parents('tr')[0];
     }
@@ -278,17 +285,91 @@
         return target.tagName === 'TD' ? target : $(target).parents('td')[0];
     }
 
+    function resetExpandAllEvenOddClass (dataTable) {
+        var classes = ['odd', 'even'];
+        $(dataTable.table().body()).find('tr').each(function (index, tr) {
+            $(tr).removeClass('odd even').addClass(classes[index % 2]);
+        });
+    };
+
+    //默认展开方法
+    function expandAll(treeGrid, insertTr, tds) {
+        var settings = treeGrid.s.dt;
+        var select = settings._select;
+        var dataTable = $(settings.nTable).dataTable().api();
+        var sLeft = treeGrid.s.left;
+
+        var expandIcon = $(treeGrid.s.expandIcon);
+        var collapseIcon = $(treeGrid.s.collapseIcon);
+        if (!tds) {
+            return
+        }
+        // 迭代存在子集的表格行
+        var parentTr = getParentTr(tds);
+        var parentTrId = getTrId();
+
+        var row = dataTable.row(parentTr);
+        var index = row.index();
+        var data = row.data();
+        //由于数据insertAfter插入问题，这里将JSON 倒序
+        var dataChildren = data.children.reverse();
+        if (data.children && data.children.length) {
+            $(parentTr).attr('id', parentTrId);
+            // var td = $(dataTable.cell(getParentTd(tds)).node());
+            var td = $(tds);
+            var paddingLeft = parseInt(td.css('padding-left'), 10);
+            var layer = parseInt(td.find('span').css('margin-left') || 0, 10) / sLeft;
+            var icon = collapseIcon.clone();
+            icon.css('marginLeft', layer * sLeft + 'px');
+            td.removeClass('treegrid-control').addClass('treegrid-control-open');
+            td.html('').append(icon);
+
+            var subRows = treeGridRows[parentTrId] = [];
+            var prevRow = row.node();
+            if(!insertTr){
+                insertTr = prevRow;
+            }
+
+            data.children.forEach(function (item) {
+                var newRow = dataTable.row.add(item);
+                var node = newRow.node();
+                var treegridTd = $(node).find('.treegrid-control');
+                var left = (layer + 1) * sLeft;
+                $(node).attr('parent-index', index);
+                treegridTd.find('span').css('marginLeft', left + 'px');
+                treegridTd.next().css('paddingLeft', paddingLeft + left + 'px');
+                // $(node).insertAfter(prevRow);
+                $(node).insertAfter(insertTr);
+                prevRow = node;
+                subRows.push(node);
+                //递归展开子集 当前插入行存在子集则递归
+                var prevRowData = dataTable.row(prevRow).data();
+                if (prevRowData.children && prevRowData.children.length) {
+                    var prevTd = $(prevRow).find('td.treegrid-control');
+                    expandAll(treeGrid, $(node) , prevTd);
+                }
+
+            });
+            resetExpandAllEvenOddClass(dataTable);
+            select && setTimeout(function () {
+                dataTable.rows(selectedIndexes).select();
+            }, 0);
+        }
+
+    };
+
     function getTrId() {
         return 'tr-' + Date.now();
     }
 
     TreeGrid.defaults = {
         left: 12,
+        expandAll: false,
         expandIcon: '<span>+</span>',
         collapseIcon: '<span>-</span>'
     };
 
-    TreeGrid.version = '1.0.0';
+    TreeGrid.version = '1.0.2';
 
     DataTable.Api.register('treeGrid()', function () {
         return this;
@@ -306,7 +387,17 @@
             var opts = $.extend({}, init, defaults);
 
             if (init !== false) {
-                new TreeGrid(settings, opts);
+                var treeGrid = new TreeGrid(settings, opts);
+                //判断是否要默认展开
+                if(init.expandAll){
+                    var settings = treeGrid.s.dt;
+                    var dataTable = $(settings.nTable).dataTable().api();
+                    var tds = $(dataTable.table().body()).find('td.treegrid-control');
+                    tds.each(function(index, td){
+                        expandAll(treeGrid,null, td);
+                    });
+                }
+
             }
         }
     });
