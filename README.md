@@ -1,6 +1,9 @@
 # dataTables.treeGrid
 DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，注意下载dataTables插件，注意下载dataTables插件 重要的说三遍！
 # 更新日志
+
+2019-5-8：很多朋友在博客私信说要一份DEMO，今天上传了DEMO样例仅供大家参考；注意要在WEB容器运行
+
 2019-4-11：新增expandAll配置属性，true默认展开，false不展开不配置默认false
 
 2018-10-11：当多层数据时，第一个子集未展开，第二个子集展开，点击父级收缩会出现死循环问题解决；
