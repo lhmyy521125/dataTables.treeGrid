@@ -1,4 +1,3 @@
-@[TOC](dataTables.treeGrid)
 # 插件介绍
 针对DataTables写的树形表格插件（[什么是DataTables? 可以点击访问官网了解](https://datatables.net/)）
 在原DataTables基础上可以快速实现树形表格的渲染：
@@ -39,7 +38,6 @@
 ![展现效果图](https://img-blog.csdnimg.cn/2019011717185479.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xobXl5NTIxMTI1,size_16,color_FFFFFF,t_70)
 # DEMO参考
 GitHub上DEMO的 运行效果，感兴趣的可以自行下载运行体验~~
-**[DEMO地址：[https://github.com/lhmyy521125/dataTables.treeGrid/tree/master/DataTables%20Demo](https://github.com/lhmyy521125/dataTables.treeGrid/tree/master/DataTables%20Demo)**
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200416152057214.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xobXl5NTIxMTI1,size_16,color_FFFFFF,t_70)
 # 使用方法
 
@@ -175,6 +173,5 @@ function draw(){
 </html>
 
 ```
-**[插件地址：https://github.com/lhmyy521125/dataTables.treeGrid](https://github.com/lhmyy521125/dataTables.treeGrid)**
 
 如果该插件帮助到您，别忘记了点个  **star** 对我的支持~
