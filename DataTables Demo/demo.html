@@ -34,6 +34,7 @@
 
   <script type="text/javascript">
     var dataTable;
+    var tree;
    $(function () {
         dataTable = $('#treetable').DataTable({
             /**
@@ -50,12 +51,7 @@
             "serverSide": true,
             "ajax": {
                 "url": "json/data.json",
-            },
-            'treeGrid': {
-                'left': 15,
-                'expandAll' : true, //是否默认展开 true 是
-                'expandIcon': '<span> + </span>',
-                'collapseIcon': '<span> - </span>'
+                // "async": false
             },
             "columns": [
                 {
@@ -81,8 +77,40 @@
                 }
             ]
         });
+       // collapseAll();
+       tree = new $.fn.dataTable.TreeGrid(dataTable,{
+           left: 15,
+           expandAll: true,
+           expandIcon: '<span>++</span>',
+           collapseIcon: '<span>--</span>'
+       });
+       //tree.expandAll();
     });
 
+
+function expandAll(){
+    tree.expandAll();
+}
+
+function collapseAll(){
+    tree.collapseAll();
+}
+
+function reload(){
+	dataTable.ajax.reload();
+}
+
+function draw(){
+	dataTable.draw(false);
+}
 </script>
+
+<div>
+<button class="btn btn-primary" type="button" onclick="expandAll()">expandAll()</button>
+<button class="btn btn-primary" type="button" onclick="collapseAll()">collapseAll()</button>
+<button class="btn btn-primary" type="button" onclick="reload()">reload()</button>
+<button class="btn btn-primary" type="button" onclick="draw()">draw()</button>
+</div>
+
  </body>
 </html>
