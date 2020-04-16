@@ -28,16 +28,6 @@
 2018-10-11：多层子集收缩的时候会导致第二级以下的展开不会删除问题；解决方案采用递归方式改写收缩方法
 
 
-```
-初始化表格只需要添加DataTables treeGrid 属性
-
-'treeGrid': {
-   'left': 15, // 图标的缩进像素
-   'expandAll' : true, //是否默认展开 true 是
-   'expandIcon': '<span><i class="fa fa-plus-square"></i></span>', //展开图标
-   'collapseIcon': '<span><i class="fa fa-minus-square"></i></span>' //收缩图标
-},
-```
 # 真实系统展现效果
 ![展现效果图](https://img-blog.csdnimg.cn/2019011717185479.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xobXl5NTIxMTI1,size_16,color_FFFFFF,t_70)
 # DEMO参考
