@@ -1,6 +1,15 @@
 # dataTables.treeGrid
 DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，注意下载dataTables插件，注意下载dataTables插件 重要的说三遍！
 # 更新日志
+2020-4-16:千呼万唤始出来,博主总算抽时间完善了这款插件，更新内容：
+1、解决dataTable reload() / draw() 时树形失效问题
+2、采用新的初始化方式，可以外部调用  expandAll() / collapseAll() 方法
+      @example
+      var table = $('#example').dataTable( { ... } );
+      var tree = new $.fn.dataTable.treeGrid( table );
+      tree.expandAll();
+ 3、更新后更容易对插件进行扩展，可以自定义自己需要实现的功能，参考expandAll() / collapseAll() 自己定义自己的方法，处理不同的需求
+
 
 2019-5-8：很多朋友在博客私信说要一份DEMO，今天上传了DEMO样例仅供大家参考；注意要在WEB容器运行
 
@@ -54,16 +63,16 @@ var dataTable = $("#editable").DataTable({
     "lengthMenu": [10,20,30],
     "ajax": {
         "url": "dataJson.json", //请求得服务地址，返回JSON
-    },
-    'treeGrid': {
-        'left': 15, // 图标的缩进像素
-        'expandAll' : true, //是否默认展开 true 是
-        'expandIcon': '<span><i class="fa fa-plus-square"></i></span>', //展开图标
-        'collapseIcon': '<span><i class="fa fa-minus-square"></i></span>' //收缩图标
     }
     ...
 })
-
+/** 采用对象构建插件，方便我们表用插件内部方法 **/
+tree = new $.fn.dataTable.TreeGrid(dataTable,{
+           left: 15,
+           expandAll: true,
+           expandIcon: '<span>++</span>',
+           collapseIcon: '<span>--</span>'
+       });
 ```
 # DEMO
 
@@ -100,12 +109,6 @@ var dataTable;
         "lengthMenu": [500],
         "ajax": {
             "url": ctx + "system/menu/dataJson",
-        },
-        'treeGrid': {
-            'left': 15,
-            'expandAll' : true,
-            'expandIcon': '<span><i class="fa fa-plus-square"></i></span>',
-            'collapseIcon': '<span><i class="fa fa-minus-square"></i></span>'
         },
         "columns": [
             {
@@ -162,4 +165,16 @@ var dataTable;
         ]
     });
 });
+
+tree = new $.fn.dataTable.TreeGrid(dataTable,{
+           left: 15,
+           expandAll: true,
+           expandIcon: '<span>++</span>',
+           collapseIcon: '<span>--</span>'
+});
+
+//调用全部展开
+tree.expandAll();
+//调用全部收缩
+tree.collapseAll();
 ```
