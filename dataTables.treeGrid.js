@@ -1,9 +1,17 @@
 /**
  * @summary     TreeGrid
  * @description TreeGrid extension for DataTable
- * @version     1.0.2
+ * @version     1.1.2
  * @file dataTables.treeGrid.js
- * 2019-04-12 此版本更新展开所有属性，支持配置默认展开
+ * 2020-04-16 更新日志
+ * 1、解决dataTable reload() / draw() 时树形失效问题
+ * 2、采用新的初始化方式，可以外部调用  expandAll() / collapseAll() 方法
+ *  @example
+ *      var table = $('#example').dataTable( { ... } );
+ *      var tree = new $.fn.dataTable.treeGrid( table );
+ *      tree.expandAll();
+ * 3、更新后更容易对插件进行扩展，可以自定义自己需要实现的功能，参考expandAll() / collapseAll() 
+ *   自己定义自己的方法，处理不同的需求
  */
 (function (factory) {
     if (typeof define === 'function' && define.amd) {
@@ -33,9 +41,9 @@
     var DataTable = $.fn.dataTable;
     //定义全局 TR 子集 二维数组
     var treeGridRows = {};
+    var globalInit;
     var TreeGrid = function (dt, init) {
         var that = this;
-
         if (!(this instanceof TreeGrid)) {
             alert('TreeGrid warning: TreeGrid must be initialised with the "new" keyword.');
             return;
@@ -44,7 +52,7 @@
         if (init === undefined || init === true) {
             init = {};
         }
-
+        globalInit = init;
         var dtSettings = new $.fn.dataTable.Api(dt).settings()[0];
 
         this.s = {
@@ -67,42 +75,18 @@
     };
 
     $.extend(TreeGrid.prototype, {
-        fnConstruct: function (oInit) {
+
+        "fnConstruct": function (oInit) {
+            var that = this;
             this.s = $.extend(true, this.s, TreeGrid.defaults, oInit);
 
             var settings = this.s.dt;
             var select = settings._select;
             var dataTable = $(settings.nTable).dataTable().api();
             var sLeft = this.s.left;
-
+            var sExpandAll = this.s.expandAll;
             var expandIcon = $(this.s.expandIcon);
             var collapseIcon = $(this.s.collapseIcon);
-
-            var resetTreeGridRows = function (trId) {
-                var subRows = treeGridRows[trId];
-                if (subRows && subRows.length) {
-                    subRows.forEach(function (node) {
-                        var subTrId = $(node).attr('id');
-                        if (treeGridRows[subTrId]) {
-                            resetTreeGridRows(subTrId);
-                        }
-                        dataTable.row($(node)).remove();
-                        $(node).remove();
-                    });
-                    delete treeGridRows[trId];
-                    $('#' + trId).find('.treegrid-control-open').each(function (i, td) {
-                        $(td).removeClass('treegrid-control-open').addClass('treegrid-control');
-                        $(td).html('').append(expandIcon.clone());
-                    });
-                }
-            };
-
-            var resetEvenOddClass = function (dataTable) {
-                var classes = ['odd', 'even'];
-                $(dataTable.table().body()).find('tr').each(function (index, tr) {
-                    $(tr).removeClass('odd even').addClass(classes[index % 2]);
-                });
-            };
 
             // Expand TreeGrid
             dataTable.on('click', 'td.treegrid-control', function (e) {
@@ -150,7 +134,6 @@
                     }, 0);
                 }
             });
-
             // Collapse TreeGrid
             dataTable.on('click', 'td.treegrid-control-open', function (e) {
                 var selectedIndexes = [];
@@ -172,20 +155,19 @@
                     dataTable.rows(selectedIndexes).select();
                 }, 0);
             });
-
+            //dataTable init 处理
             dataTable.on('init.dt', function () {
                 console.log('Table initialisation complete: ' + new Date().getTime());
-                expandAll(dataTable, "");
-            });
-            // resetTreeGridRows on pagination
-            dataTable.on('page', function () {
-                resetTreeGridRows();
+                //dataTable 初始化完成调用展开
+                if(sExpandAll){
+                    that.expandAll.call(that)
+                }
             });
 
-            // resetTreeGridRows on sorting
-            dataTable.on('order', function () {
-                resetTreeGridRows();
-            });
+            //dataTable draw 处理
+            dataTable.on('draw.dt.DTFC', function () {
+                that._fnDraw.call(that);
+            })
 
             var inProgress = false;
             // Check parents and children on select
@@ -197,7 +179,6 @@
                 indexes.forEach(function (index) {
                     // Check parents
                     selectParent(dataTable, index);
-
                     // Check children
                     selectChildren(dataTable, index);
                 });
@@ -219,9 +200,91 @@
                 });
                 inProgress = false;
             });
-        }
+        },
+        /**
+         *  @returns {void}
+         *  @example
+         *      var table = $('#example').dataTable( { ... } );
+         *      var tree = new $.fn.dataTable.treeGrid( table );
+         *      tree.expandAll();
+         */
+        "expandAll": function () {
+            console.log('expandAll: ' + new Date().getTime());
+            var that = this;
+            //修改展开属性
+            globalInit.expandAll = true;
+            this.s = $.extend(true, this.s, TreeGrid.defaults, globalInit);
+            var dataTable = $(this.s.dt.nTable).dataTable().api();
+            var tds = $(dataTable.table().body()).find('td.treegrid-control');
+            tds.each(function (index, td) {
+                _expandAll(that, null, td);
+            });
+        },
 
+        "collapseAll":function(){
+            console.log('collapseAll: ' + new Date().getTime());
+            var that = this;
+            //修改展开属性
+            globalInit.expandAll = false;
+            this.s = $.extend(true, this.s, TreeGrid.defaults, globalInit);
+            var dataTable = $(this.s.dt.nTable).dataTable().api();
+            var trs = $(dataTable.table().body()).find('tr');
+            trs.each(function (index, tr) {
+                if(typeof($(tr).attr("parent-index"))=="undefined"){
+                    var trid = $(tr).attr('id');
+                    resetTreeGridRows(trid);
+                }
+            });
+        },
+
+        "_fnDraw": function () {
+            console.log('_fnDraw: ' + new Date().getTime());
+            var that = this;
+            this.s = $.extend(true, this.s, TreeGrid.defaults, globalInit);
+            /* Draw callback function */
+            if (this.s.expandAll) {
+                console.log('expandAll is True: ' + new Date().getTime());
+                var tds = $(dataTable.table().body()).find('td.treegrid-control');
+                tds.each(function (index, td) {
+                    _expandAll(that, null, td);
+                });
+            }
+            /* Event triggering */
+            $(this).trigger('draw.dtfc', {
+                "left": this.s.left
+            });
+        },
     });
+
+    /**
+     * 收缩展开处理
+     * @param trId
+     */
+    function resetTreeGridRows (trId) {
+        var subRows = treeGridRows[trId];
+        if (subRows && subRows.length) {
+            subRows.forEach(function (node) {
+                var subTrId = $(node).attr('id');
+                if (treeGridRows[subTrId]) {
+                    resetTreeGridRows(subTrId);
+                }
+                dataTable.row($(node)).remove();
+                $(node).remove();
+            });
+            delete treeGridRows[trId];
+            $('#' + trId).find('.treegrid-control-open').each(function (i, td) {
+                $(td).removeClass('treegrid-control-open').addClass('treegrid-control');
+                $(td).html('').append($(globalInit.expandIcon).clone());
+            });
+        }
+    };
+
+    function resetEvenOddClass(dataTable) {
+        var classes = ['odd', 'even'];
+        $(dataTable.table().body()).find('tr').each(function (index, tr) {
+            $(tr).removeClass('odd even').addClass(classes[index % 2]);
+        });
+    };
 
     function selectParent(dataTable, index) {
         var row = dataTable.row(index);
@@ -276,24 +339,8 @@
         }
     }
 
-
-    function getParentTr(target) {
-        return $(target).parents('tr')[0];
-    }
-
-    function getParentTd(target) {
-        return target.tagName === 'TD' ? target : $(target).parents('td')[0];
-    }
-
-    function resetExpandAllEvenOddClass (dataTable) {
-        var classes = ['odd', 'even'];
-        $(dataTable.table().body()).find('tr').each(function (index, tr) {
-            $(tr).removeClass('odd even').addClass(classes[index % 2]);
-        });
-    };
-
     //默认展开方法
-    function expandAll(treeGrid, insertTr, tds) {
+    function _expandAll(treeGrid, insertTr, tds) {
         var settings = treeGrid.s.dt;
         var select = settings._select;
         var dataTable = $(settings.nTable).dataTable().api();
@@ -311,9 +358,10 @@
         var row = dataTable.row(parentTr);
         var index = row.index();
         var data = row.data();
-        //由于数据insertAfter插入问题，这里将JSON 倒序
-        var dataChildren = data.children.reverse();
+
         if (data.children && data.children.length) {
+            //由于数据insertAfter插入问题，这里将JSON 倒序
+            data.children.reverse();
             $(parentTr).attr('id', parentTrId);
             // var td = $(dataTable.cell(getParentTd(tds)).node());
             var td = $(tds);
@@ -326,7 +374,7 @@
 
             var subRows = treeGridRows[parentTrId] = [];
             var prevRow = row.node();
-            if(!insertTr){
+            if (!insertTr) {
                 insertTr = prevRow;
             }
 
@@ -346,30 +394,37 @@
                 var prevRowData = dataTable.row(prevRow).data();
                 if (prevRowData.children && prevRowData.children.length) {
                     var prevTd = $(prevRow).find('td.treegrid-control');
-                    expandAll(treeGrid, $(node) , prevTd);
+                    _expandAll(treeGrid, $(node), prevTd);
                 }
 
             });
-            resetExpandAllEvenOddClass(dataTable);
             select && setTimeout(function () {
                 dataTable.rows(selectedIndexes).select();
             }, 0);
         }
-
     };
 
     function getTrId() {
         return 'tr-' + Date.now();
     }
 
+    function getParentTr(target) {
+        return $(target).parents('tr')[0];
+    }
+
+    function getParentTd(target) {
+        return target.tagName === 'TD' ? target : $(target).parents('td')[0];
+    }
+
     TreeGrid.defaults = {
-        left: 12,
-        expandAll: false,
-        expandIcon: '<span>+</span>',
-        collapseIcon: '<span>-</span>'
+        "left": 12,
+        "expandAll": false,
+        "expandIcon": '<span>+</span>',
+        "collapseIcon": '<span>-</span>',
+        "fnDrawCallback": null
     };
 
-    TreeGrid.version = '1.0.2';
+    TreeGrid.version = '1.1.2';
 
     DataTable.Api.register('treeGrid()', function () {
         return this;
@@ -388,16 +443,6 @@
 
             if (init !== false) {
                 var treeGrid = new TreeGrid(settings, opts);
-                //判断是否要默认展开
-                if(init.expandAll){
-                    var settings = treeGrid.s.dt;
-                    var dataTable = $(settings.nTable).dataTable().api();
-                    var tds = $(dataTable.table().body()).find('td.treegrid-control');
-                    tds.each(function(index, td){
-                        expandAll(treeGrid,null, td);
-                    });
-                }
-
             }
         }
     });
