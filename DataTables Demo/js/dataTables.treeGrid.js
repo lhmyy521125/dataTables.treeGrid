@@ -211,8 +211,6 @@
         "expandAll": function () {
             console.log('expandAll: ' + new Date().getTime());
             var that = this;
-            //修改展开属性
-            globalInit.expandAll = true;
             this.s = $.extend(true, this.s, TreeGrid.defaults, globalInit);
             var dataTable = $(this.s.dt.nTable).dataTable().api();
             var tds = $(dataTable.table().body()).find('td.treegrid-control');
@@ -224,8 +222,6 @@
         "collapseAll":function(){
             console.log('collapseAll: ' + new Date().getTime());
             var that = this;
-            //修改展开属性
-            globalInit.expandAll = false;
             this.s = $.extend(true, this.s, TreeGrid.defaults, globalInit);
             var dataTable = $(this.s.dt.nTable).dataTable().api();
             var trs = $(dataTable.table().body()).find('tr');
