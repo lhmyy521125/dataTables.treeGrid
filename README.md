@@ -3,7 +3,9 @@ DataTables.treeGrid.js Repair Edition ， 首先注意下载dataTables插件，�
 # 更新日志
 2020-4-16:千呼万唤始出来,博主总算抽时间完善了这款插件，更新内容：
 1、解决dataTable reload() / draw() 时树形失效问题
+
 2、采用新的初始化方式，可以外部调用  expandAll() / collapseAll() 方法
+
 ```
       @example
       var table = $('#example').dataTable( { ... } );
